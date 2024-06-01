@@ -2,6 +2,7 @@ import itertools
 from collections import defaultdict
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
+import psutil
 
 def volume_of_tetrahedron(p1, p2, p3, p4):
     AB = (p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2])
@@ -59,19 +60,31 @@ def process_chunk_wrapper(args):
     chunk = candidates[chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
     return process_combinations_chunk(chunk)
 
-def find_smallest_tetrahedrons(points, chunk_size=1000):
+def print_system_usage():
+    print(f"CPU usage: {psutil.cpu_percent()}%")
+    print(f"Memory usage: {psutil.virtual_memory().percent}%")
+    print(f"Available memory: {psutil.virtual_memory().available / (1024 * 1024)} MB")
+    print("="*50)
+
+def find_smallest_tetrahedrons(points, chunk_size=10000):
+    print_system_usage()
     candidates = find_combinations_with_sum(points, 100)
+    print(f"Number of candidates: {len(candidates)}")
     
     tetrahedrons = []
     total_chunks = (len(candidates) + chunk_size - 1) // chunk_size  # Calculate total number of chunks
+    print(f"Total chunks to process: {total_chunks}")
+    print_system_usage()
 
     args = [(candidates, i, chunk_size) for i in range(total_chunks)]
 
     with Pool(cpu_count()) as pool:
-        for result in tqdm(pool.imap(process_chunk_wrapper, args), total=total_chunks, desc="Processing chunks"):
+        for result in tqdm(pool.imap_unordered(process_chunk_wrapper, args), total=total_chunks, desc="Processing chunks"):
             tetrahedrons.extend(result)
+            print_system_usage()
     
     tetrahedrons.sort()
+    print_system_usage()
     return [indices for _, indices in tetrahedrons[:4]]
 
 # Parse points from files
