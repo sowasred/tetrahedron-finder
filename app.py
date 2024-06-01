@@ -3,7 +3,6 @@ from collections import defaultdict
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
 import psutil
-import time
 
 def volume_of_tetrahedron(p1, p2, p3, p4):
     AB = (p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2])
@@ -31,6 +30,11 @@ def parse_points(file_path):
             x, y, z, n = float(parts[0]), float(parts[1]), float(parts[2]), int(parts[3])
             points.append((x, y, z, n))
         return points
+
+def filter_points(points, target_sum=100, tolerance=20):
+    filtered_points = [p for p in points if target_sum - tolerance <= p[3] <= target_sum + tolerance]
+    print(f"Filtered points from {len(points)} to {len(filtered_points)}")
+    return filtered_points
 
 def find_combinations_with_sum(points, target_sum):
     n_to_points = defaultdict(list)
@@ -73,14 +77,20 @@ def print_system_usage(stage=""):
     print("="*50)
 
 def find_smallest_tetrahedrons(points, chunk_size=10000):
-    print_system_usage("Before finding combinations")
-    candidates = find_combinations_with_sum(points, 100)
+    print_system_usage("Before filtering points")
+    filtered_points = filter_points(points)
+    print_system_usage("After filtering points")
+    candidates = find_combinations_with_sum(filtered_points, 100)
     print(f"Number of candidates: {len(candidates)}")
     
     tetrahedrons = []
     total_chunks = (len(candidates) + chunk_size - 1) // chunk_size  # Calculate total number of chunks
     print(f"Total chunks to process: {total_chunks}")
     print_system_usage("After finding combinations")
+
+    if total_chunks == 0:
+        print("No chunks to process, exiting.")
+        return []
 
     args = [(candidates, i, chunk_size) for i in range(total_chunks)]
 
