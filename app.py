@@ -48,11 +48,13 @@ def find_combinations_with_sum(points, target_sum):
     return candidates
 
 def process_combinations_chunk(chunk):
+    print(f"Processing chunk of size {len(chunk)}")
     tetrahedrons = []
     for indices, pts in chunk:
         p1, p2, p3, p4 = pts
         vol = volume_of_tetrahedron(p1, p2, p3, p4)
         tetrahedrons.append((vol, sorted(indices)))
+    print(f"Completed processing chunk of size {len(chunk)}")
     return tetrahedrons
 
 def process_chunk_wrapper(args):
