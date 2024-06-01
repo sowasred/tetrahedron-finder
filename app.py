@@ -1,5 +1,4 @@
 import itertools
-from collections import defaultdict
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
 import psutil
@@ -32,31 +31,25 @@ def parse_points(file_path):
         return points
 
 def find_combinations_with_sum(points, target_sum=100):
+    point_indices = list(range(len(points)))
     valid_combinations = []
-    for combination in itertools.combinations(points, 4):
-        print(f"Checking combination: {combination}")
-        if sum(point[3] for point in combination) == target_sum:
+    for combination in itertools.combinations(point_indices, 4):
+        if sum(points[i][3] for i in combination) == target_sum:
             valid_combinations.append(combination)
     return valid_combinations
 
-def process_combinations_chunk(chunk):
-    print(f"Processing chunk of size {len(chunk)}")
+def process_combinations_chunk(chunk, points):
     tetrahedrons = []
-    for pts in chunk:
-        p1, p2, p3, p4 = pts
+    for indices in chunk:
+        p1, p2, p3, p4 = (points[i] for i in indices)
         vol = volume_of_tetrahedron(p1, p2, p3, p4)
-        indices = [points.index(p1), points.index(p2), points.index(p3), points.index(p4)]
         tetrahedrons.append((vol, sorted(indices)))
-    print(f"Completed processing chunk of size {len(chunk)}")
     return tetrahedrons
 
 def process_chunk_wrapper(args):
-    candidates, chunk_idx, chunk_size = args
-    print(f"Processing chunk index: {chunk_idx}")
+    candidates, chunk_idx, chunk_size, points = args
     chunk = candidates[chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-    result = process_combinations_chunk(chunk)
-    print(f"Completed chunk index: {chunk_idx}")
-    return result
+    return process_combinations_chunk(chunk, points)
 
 def print_system_usage(stage=""):
     print(f"[{stage}] CPU usage: {psutil.cpu_percent()}%")
@@ -78,7 +71,7 @@ def find_smallest_tetrahedrons(points, chunk_size=1000):
         print("No chunks to process, exiting.")
         return []
 
-    args = [(candidates, i, chunk_size) for i in range(total_chunks)]
+    args = [(candidates, i, chunk_size, points) for i in range(total_chunks)]
 
     with Pool(cpu_count()) as pool:
         for result in tqdm(pool.imap_unordered(process_chunk_wrapper, args), total=total_chunks, desc="Processing chunks"):
@@ -93,16 +86,12 @@ def find_smallest_tetrahedrons(points, chunk_size=1000):
 points_small = parse_points('points_small.txt')
 points_large = parse_points('points_large.txt')
 
-# Global points list
-points = points_small  # Adjust this to switch between small and large points
-
 # Find the smallest tetrahedrons
 print("Processing points_small.txt...")
 smallest_tetrahedrons_small = find_smallest_tetrahedrons(points_small)
 
-print("\nProcessing points_large.txt...")
-points = points_large
-smallest_tetrahedrons_large = find_smallest_tetrahedrons(points_large)
+# print("\nProcessing points_large.txt...")
+# smallest_tetrahedrons_large = find_smallest_tetrahedrons(points_large)
 
 # Verify the sum of n values and print the results
 for i, tetrahedron in enumerate(smallest_tetrahedrons_small):
@@ -110,7 +99,7 @@ for i, tetrahedron in enumerate(smallest_tetrahedrons_small):
     n_sum = sum(n_values)
     print(f'Smallest tetrahedron {i+1} for points_small.txt: {tetrahedron}, n values: {n_values}, sum: {n_sum}')
 
-for i, tetrahedron in enumerate(smallest_tetrahedrons_large):
-    n_values = [points_large[index][3] for index in tetrahedron]
-    n_sum = sum(n_values)
-    print(f'Smallest tetrahedron {i+1} for points_large.txt: {tetrahedron}, n values: {n_values}, sum: {n_sum}')
+# for i, tetrahedron in enumerate(smallest_tetrahedrons_large):
+#     n_values = [points_large[index][3] for index in tetrahedron]
+#     n_sum = sum(n_values)
+#     print(f'Smallest tetrahedron {i+1} for points_large.txt: {tetrahedron}, n values: {n_values}, sum: {n_sum}')
