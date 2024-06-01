@@ -34,17 +34,15 @@ def parse_points(file_path):
 
 def find_combinations_with_sum(points, target_sum=100):
     print(f"Finding combinations with sum {target_sum}...")
-    points = sorted(points, key=lambda p: p[3])  # Sort points by their `n` value
+    points = sorted(enumerate(points), key=lambda p: p[1][3])  # Sort points by their `n` value
     valid_combinations = []
 
     for comb in itertools.combinations(points, 4):
-        print(f"Processing combination: {comb}")
-        n_values = [p[3] for p in comb]
-        cumulative_sums = list(accumulate(n_values))
-        if cumulative_sums[-1] == target_sum:
-            indices = tuple(points.index(p) for p in comb)
+        n_values = [p[1][3] for p in comb]
+        if sum(n_values) == target_sum:
+            indices = tuple(p[0] for p in comb)
             valid_combinations.append(indices)
-        elif cumulative_sums[-1] > target_sum:
+        elif sum(n_values) > target_sum:
             break  # Early termination since points are sorted
     
     return valid_combinations
