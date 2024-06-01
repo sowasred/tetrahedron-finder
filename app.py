@@ -1,6 +1,7 @@
 import itertools
 from collections import defaultdict
 from tqdm import tqdm
+from multiprocessing import Pool, cpu_count
 
 def volume_of_tetrahedron(p1, p2, p3, p4):
     AB = (p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2])
@@ -58,9 +59,14 @@ def find_smallest_tetrahedrons(points, chunk_size=1000):
     
     tetrahedrons = []
     total_chunks = (len(candidates) + chunk_size - 1) // chunk_size  # Calculate total number of chunks
-    for i in tqdm(range(0, len(candidates), chunk_size), desc="Processing chunks", total=total_chunks):
-        chunk = candidates[i:i + chunk_size]
-        tetrahedrons.extend(process_combinations_chunk(chunk))
+    
+    def process_chunk_wrapper(chunk_idx):
+        chunk = candidates[chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
+        return process_combinations_chunk(chunk)
+    
+    with Pool(cpu_count()) as pool:
+        for result in tqdm(pool.imap(process_chunk_wrapper, range(total_chunks)), total=total_chunks, desc="Processing chunks"):
+            tetrahedrons.extend(result)
     
     tetrahedrons.sort()
     return [indices for _, indices in tetrahedrons[:4]]
