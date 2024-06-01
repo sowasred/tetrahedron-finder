@@ -31,33 +31,21 @@ def parse_points(file_path):
             points.append((x, y, z, n))
         return points
 
-def filter_points(points, target_sum=100, tolerance=50):
-    filtered_points = [p for p in points if target_sum - tolerance <= p[3] <= target_sum + tolerance]
-    print(f"Filtered points from {len(points)} to {len(filtered_points)}")
-    return filtered_points
-
-def find_combinations_with_sum(points, target_sum):
-    n_to_points = defaultdict(list)
-    for i, point in enumerate(points):
-        n = point[3]
-        n_to_points[n].append((i, point))
-    
-    candidates = []
-    keys = list(n_to_points.keys())
-    for comb in itertools.combinations(keys, 4):
-        if sum(comb) == target_sum:
-            for combo in itertools.product(*[n_to_points[n] for n in comb]):
-                indices, pts = zip(*combo)
-                if len(set(indices)) == 4:
-                    candidates.append((indices, pts))
-    return candidates
+def find_combinations_with_sum(points, target_sum=100):
+    valid_combinations = []
+    for combination in itertools.combinations(points, 4):
+        print(f"Checking combination: {combination}")
+        if sum(point[3] for point in combination) == target_sum:
+            valid_combinations.append(combination)
+    return valid_combinations
 
 def process_combinations_chunk(chunk):
     print(f"Processing chunk of size {len(chunk)}")
     tetrahedrons = []
-    for indices, pts in chunk:
+    for pts in chunk:
         p1, p2, p3, p4 = pts
         vol = volume_of_tetrahedron(p1, p2, p3, p4)
+        indices = [points.index(p1), points.index(p2), points.index(p3), points.index(p4)]
         tetrahedrons.append((vol, sorted(indices)))
     print(f"Completed processing chunk of size {len(chunk)}")
     return tetrahedrons
@@ -76,11 +64,9 @@ def print_system_usage(stage=""):
     print(f"[{stage}] Available memory: {psutil.virtual_memory().available / (1024 * 1024)} MB")
     print("="*50)
 
-def find_smallest_tetrahedrons(points, chunk_size=10000):
-    print_system_usage("Before filtering points")
-    filtered_points = filter_points(points)
-    print_system_usage("After filtering points")
-    candidates = find_combinations_with_sum(filtered_points, 100)
+def find_smallest_tetrahedrons(points, chunk_size=1000):
+    print_system_usage("Before finding combinations")
+    candidates = find_combinations_with_sum(points, 100)
     print(f"Number of candidates: {len(candidates)}")
     
     tetrahedrons = []
@@ -107,11 +93,15 @@ def find_smallest_tetrahedrons(points, chunk_size=10000):
 points_small = parse_points('points_small.txt')
 points_large = parse_points('points_large.txt')
 
+# Global points list
+points = points_small  # Adjust this to switch between small and large points
+
 # Find the smallest tetrahedrons
 print("Processing points_small.txt...")
 smallest_tetrahedrons_small = find_smallest_tetrahedrons(points_small)
 
 print("\nProcessing points_large.txt...")
+points = points_large
 smallest_tetrahedrons_large = find_smallest_tetrahedrons(points_large)
 
 # Verify the sum of n values and print the results
