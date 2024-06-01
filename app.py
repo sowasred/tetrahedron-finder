@@ -31,7 +31,7 @@ def parse_points(file_path):
             points.append((x, y, z, n))
         return points
 
-def filter_points(points, target_sum=100, tolerance=20):
+def filter_points(points, target_sum=100, tolerance=50):
     filtered_points = [p for p in points if target_sum - tolerance <= p[3] <= target_sum + tolerance]
     print(f"Filtered points from {len(points)} to {len(filtered_points)}")
     return filtered_points
