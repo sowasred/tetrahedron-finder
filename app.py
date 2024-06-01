@@ -35,12 +35,11 @@ def find_combinations_with_sum(points, target_sum=100):
     points = sorted(points, key=lambda p: p[3])  # Sort points by their `n` value
     valid_combinations = []
     
-    for comb in itertools.combinations(points, 4):
-        n_values = [p[3] for p in comb]
+    for comb in itertools.combinations(range(len(points)), 4):
+        n_values = [points[i][3] for i in comb]
         n_sum = sum(n_values)
         if n_sum == target_sum:
-            indices = tuple(points.index(p) for p in comb)
-            valid_combinations.append(indices)
+            valid_combinations.append(comb)
     
     return valid_combinations
 
@@ -80,7 +79,7 @@ def find_smallest_tetrahedrons(points, chunk_size=1000):
     args = [(candidates, i, chunk_size, points) for i in range(total_chunks)]
 
     with Pool(cpu_count()) as pool:
-        for result in tqdm(pool.imap_unordered(process_chunk_wrapper, args), total=total_chunks, desc="Processing chunks"):
+        for result in tqdm(pool.imap_unordered(process_chunk_wrapper, args, chunksize=1), total=total_chunks, desc="Processing chunks"):
             tetrahedrons.extend(result)
             print_system_usage("During processing")
     
