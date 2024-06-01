@@ -41,8 +41,6 @@ def find_combinations_with_sum(points, target_sum=100):
         if n_sum == target_sum:
             indices = tuple(points.index(p) for p in comb)
             valid_combinations.append(indices)
-        elif n_sum > target_sum:
-            break  # Early termination since points are sorted
     
     return valid_combinations
 
