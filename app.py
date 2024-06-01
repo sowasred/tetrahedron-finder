@@ -1,4 +1,4 @@
-import itertools
+from collections import defaultdict
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
 import psutil
@@ -31,11 +31,27 @@ def parse_points(file_path):
         return points
 
 def find_combinations_with_sum(points, target_sum=100):
-    point_indices = list(range(len(points)))
+    points_by_n = defaultdict(list)
+    for i, point in enumerate(points):
+        points_by_n[point[3]].append(i)
+    
     valid_combinations = []
-    for combination in itertools.combinations(point_indices, 4):
-        if sum(points[i][3] for i in combination) == target_sum:
-            valid_combinations.append(combination)
+    for n1, points1 in points_by_n.items():
+        for n2, points2 in points_by_n.items():
+            if n1 + n2 > target_sum:
+                continue
+            for n3, points3 in points_by_n.items():
+                if n1 + n2 + n3 > target_sum:
+                    continue
+                for n4, points4 in points_by_n.items():
+                    if n1 + n2 + n3 + n4 == target_sum:
+                        for i1 in points1:
+                            for i2 in points2:
+                                for i3 in points3:
+                                    for i4 in points4:
+                                        indices = {i1, i2, i3, i4}
+                                        if len(indices) == 4:
+                                            valid_combinations.append((i1, i2, i3, i4))
     return valid_combinations
 
 def process_combinations_chunk(chunk, points):
@@ -88,16 +104,16 @@ points_large = parse_points('points_large.txt')
 
 # Find the smallest tetrahedrons
 print("Processing points_small.txt...")
-# smallest_tetrahedrons_small = find_smallest_tetrahedrons(points_small)
+smallest_tetrahedrons_small = find_smallest_tetrahedrons(points_small)
 
-# print("\nProcessing points_large.txt...")
+print("\nProcessing points_large.txt...")
 smallest_tetrahedrons_large = find_smallest_tetrahedrons(points_large)
 
 # Verify the sum of n values and print the results
-# for i, tetrahedron in enumerate(smallest_tetrahedrons_small):
-#     n_values = [points_small[index][3] for index in tetrahedron]
-#     n_sum = sum(n_values)
-#     print(f'Smallest tetrahedron {i+1} for points_small.txt: {tetrahedron}, n values: {n_values}, sum: {n_sum}')
+for i, tetrahedron in enumerate(smallest_tetrahedrons_small):
+    n_values = [points_small[index][3] for index in tetrahedron]
+    n_sum = sum(n_values)
+    print(f'Smallest tetrahedron {i+1} for points_small.txt: {tetrahedron}, n values: {n_values}, sum: {n_sum}')
 
 for i, tetrahedron in enumerate(smallest_tetrahedrons_large):
     n_values = [points_large[index][3] for index in tetrahedron]
