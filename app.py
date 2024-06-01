@@ -54,18 +54,21 @@ def process_combinations_chunk(chunk):
         tetrahedrons.append((vol, sorted(indices)))
     return tetrahedrons
 
+def process_chunk_wrapper(args):
+    candidates, chunk_idx, chunk_size = args
+    chunk = candidates[chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
+    return process_combinations_chunk(chunk)
+
 def find_smallest_tetrahedrons(points, chunk_size=1000):
     candidates = find_combinations_with_sum(points, 100)
     
     tetrahedrons = []
     total_chunks = (len(candidates) + chunk_size - 1) // chunk_size  # Calculate total number of chunks
-    
-    def process_chunk_wrapper(chunk_idx):
-        chunk = candidates[chunk_idx * chunk_size : (chunk_idx + 1) * chunk_size]
-        return process_combinations_chunk(chunk)
-    
+
+    args = [(candidates, i, chunk_size) for i in range(total_chunks)]
+
     with Pool(cpu_count()) as pool:
-        for result in tqdm(pool.imap(process_chunk_wrapper, range(total_chunks)), total=total_chunks, desc="Processing chunks"):
+        for result in tqdm(pool.imap(process_chunk_wrapper, args), total=total_chunks, desc="Processing chunks"):
             tetrahedrons.extend(result)
     
     tetrahedrons.sort()
