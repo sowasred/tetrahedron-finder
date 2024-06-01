@@ -107,7 +107,7 @@ print("Processing points_small.txt...")
 smallest_tetrahedrons_small = find_smallest_tetrahedrons(points_small)
 
 print("\nProcessing points_large.txt...")
-smallest_tetrahedrons_large = find_smallest_tetrahedrons(points_large)
+# smallest_tetrahedrons_large = find_smallest_tetrahedrons(points_large)
 
 # Verify the sum of n values and print the results
 for i, tetrahedron in enumerate(smallest_tetrahedrons_small):
@@ -115,7 +115,7 @@ for i, tetrahedron in enumerate(smallest_tetrahedrons_small):
     n_sum = sum(n_values)
     print(f'Smallest tetrahedron {i+1} for points_small.txt: {tetrahedron}, n values: {n_values}, sum: {n_sum}')
 
-for i, tetrahedron in enumerate(smallest_tetrahedrons_large):
-    n_values = [points_large[index][3] for index in tetrahedron]
-    n_sum = sum(n_values)
-    print(f'Smallest tetrahedron {i+1} for points_large.txt: {tetrahedron}, n values: {n_values}, sum: {n_sum}')
+# for i, tetrahedron in enumerate(smallest_tetrahedrons_large):
+#     n_values = [points_large[index][3] for index in tetrahedron]
+#     n_sum = sum(n_values)
+#     print(f'Smallest tetrahedron {i+1} for points_large.txt: {tetrahedron}, n values: {n_values}, sum: {n_sum}')
